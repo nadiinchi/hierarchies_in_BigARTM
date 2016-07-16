@@ -44,9 +44,13 @@ class ARTM_Level(artm.ARTM):
             phi = self.parent_model.get_phi(topic_names={topic_name})
             if not topic_name_idx:
                 #batch.token is the same for all topics, create it once
-                for token in phi.index:
+                topics_and_tokens_info = \
+                      self.parent_model.master.get_phi_info(self.model_pwt)
+                for token, class_id in \
+                      zip(topics_and_tokens_info.token, topics_and_tokens_info.class_id):
                     if token not in batch_dict:
                         batch.token.append(token)
+                        batch.class_id.append(class_id)
                         batch_dict[token] = len(batch.token) - 1
             
             # add item (topic) to batch
