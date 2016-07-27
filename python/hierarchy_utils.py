@@ -74,6 +74,10 @@ class hARTM:
         :Description: the version of BigARTM library in a MAJOR.MINOR.PATCH format
         """
         return self._lib.version()
+        
+    @property
+    def num_levels(self):
+        return len(self._levels)
 
     # ========== SETTERS ==========
     @num_processors.setter
@@ -183,6 +187,9 @@ class hARTM:
         return self._levels[-1]
                                            
     def del_level(self, level_idx):
+        if level_idx == -1:
+            del self._levels[-1]
+            return
         for _ in xrange(level_idx, len(self._levels)):
             del self._levels[-1]
             
@@ -270,11 +277,11 @@ class ARTM_Level(artm.ARTM):
         batch.description = "__parent_phi_matrix_batch__"
         for topic_name_idx in range(len(self.parent_model.topic_names)):
             topic_name = self.parent_model.topic_names[topic_name_idx]
-            phi = self.parent_model.get_phi(topic_names={topic_name})
+            phi = self.parent_model.get_phi(topic_names={topic_name}, model_name=self.parent_model.model_nwt)
             if not topic_name_idx:
                 # batch.token is the same for all topics, create it once
                 topics_and_tokens_info = \
-                      self.parent_model.master.get_phi_info(self.model_pwt)
+                      self.parent_model.master.get_phi_info(self.parent_model.model_nwt)
                 for token, class_id in \
                       zip(topics_and_tokens_info.token, topics_and_tokens_info.class_id):
                     if token not in batch_dict:
@@ -292,7 +299,7 @@ class ARTM_Level(artm.ARTM):
                     field.token_id.append(batch_dict[token])
                     field.token_weight.append(float(weight))
                     NNZ += weight
-        # self.parent_batch = batch
+        self.parent_batch = batch
         with open(self.phi_batch_path, 'wb') as fout:
             fout.write(batch.SerializeToString())
             
@@ -305,14 +312,22 @@ class ARTM_Level(artm.ARTM):
 
 
     def fit_offline(self, batch_vectorizer, num_collection_passes=1, *args, **kwargs):
-        modified_batch_vectorizer = copy.copy(batch_vectorizer)
-        modified_batch_vectorizer._batches_list.append(
+        modified_batch_vectorizer = artm.BatchVectorizer(batches=[''], data_path=batch_vectorizer.data_path, 
+                                                 batch_size=batch_vectorizer.batch_size,
+                                                 gather_dictionary=False)
+        del modified_batch_vectorizer.batches_list[0]
+        del modified_batch_vectorizer.weights[0]
+        for batch, weight in zip(batch_vectorizer.batches_list, batch_vectorizer.weights):
+            modified_batch_vectorizer.batches_list.append(batch)
+            modified_batch_vectorizer.weights.append(weight)
+        modified_batch_vectorizer.batches_list.append(
                 artm.batches_utils.Batch(self.phi_batch_path))
-        modified_batch_vectorizer._weights.append(self.phi_batch_weight)
+        modified_batch_vectorizer.weights.append(self.phi_batch_weight)
         #import_batches_args = artm.wrapper.messages_pb2.ImportBatchesArgs(
         #                           batch=[self.parent_batch])
         #self._lib.ArtmImportBatches(self.master.master_id, import_batches_args)
         hierarchy_sparsing_regularizer_names = set()
+        
         for reg_name in self.regularizers.data:
             if isinstance(self.regularizers[reg_name], artm.regularizers.HierarchySparsingThetaRegularizer):
                 hierarchy_sparsing_regularizer_names.add(reg_name)
@@ -326,11 +341,13 @@ class ARTM_Level(artm.ARTM):
                     raise ValueError("len(regularizers["+reg_name+"].config.topic_proportion) != num_topics")
                 if len(self.regularizers[reg_name].config.parent_topic_proportion) != self.parent_model.num_topics:
                     raise ValueError("len(regularizers["+reg_name+"].config.parent_topic_proportion) != parent_model.num_topics")
+        
         if not len(hierarchy_sparsing_regularizer_names):
-            super(ARTM_Level, self).fit_offline(modified_batch_vectorizer, *args, **kwargs)
+            super(ARTM_Level, self).fit_offline(modified_batch_vectorizer, num_collection_passes=num_collection_passes, \
+                                                *args, **kwargs)
         else:
             for _ in xrange(num_collection_passes):
-                psi = self.get_psi(ignore_cache_theta=True).values 
+                psi = self.get_psi().values
                 for reg_name in hierarchy_sparsing_regularizer_names:
                     parent_topic_proportion = np.array(self.regularizers[reg_name].config.parent_topic_proportion)
                     topic_proportion = (psi * parent_topic_proportion[np.newaxis, :]).sum(axis=1)
@@ -338,6 +355,8 @@ class ARTM_Level(artm.ARTM):
                         self.regularizers[reg_name].config.topic_proportion[topic_idx] = float(topic_proportion[topic_idx])
                     self._master.reconfigure_regularizer(reg_name, self.regularizers[reg_name].config)
                 super(ARTM_Level, self).fit_offline(modified_batch_vectorizer, num_collection_passes=1)
+        
+        # super(ARTM_Level, self).fit_offline(modified_batch_vectorizer, *args, **kwargs)
                 
                 
     def fit_online(self, *args, **kwargs):
