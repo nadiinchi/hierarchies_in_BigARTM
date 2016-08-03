@@ -11751,7 +11751,8 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Hierarchies-in-BigARTM">Hierarchies in BigARTM<a class="anchor-link" href="#Hierarchies-in-BigARTM">&#182;</a></h1>
+<h1 id="Hierarchies-in-BigARTM">Hierarchies in BigARTM<a class="anchor-link" href="#Hierarchies-in-BigARTM">&#182;</a></h1><p>In this tutorial we describe principles of building hierarchies in BigARTM.</p>
+
 </div>
 </div>
 </div>
@@ -11801,11 +11802,11 @@ where regularizers $R(\Phi, \Theta) = \sum_i \tau_i R_i(\Phi, \Theta)$ allows in
 <li>First level has few topics that are main collection topics. First level topics have the only parent topic (root). </li>
 <li>For each level with index &gt; 1 we need to to establish parent-children relationship with previous level topics.</li>
 </ul>
-<h3 id="Establishing-parent-children-relations">Establishing parent-children relations<a class="anchor-link" href="#Establishing-parent-children-relations">&#182;</a></h3><p>When we built parent level, let's denote its topics $a \in A$ (ancestor) and matrices $\Phi^p$ and $\theta^p$.</p>
+<h3 id="Establishing-parent-children-relations">Establishing parent-children relations<a class="anchor-link" href="#Establishing-parent-children-relations">&#182;</a></h3><p>When we have built parent level, let's denote its topics $a \in A$ (ancestor) and matrices $\Phi^p$ and $\Theta^p$. Now we will build next level model with topics set $T$.</p>
 <p>Let's introduce new matrix factorization problem:
     $$ \phi^p_{wa} = p(w|a) \approx \sum_{t} p(w|t) p(t|a) = \sum_t \phi_{wt} \psi_{ta}$$</p>
-<p>with new parameters $\Psi = \{ \psi_{ta} \}_{T \times A}$.</p>
-<p>If KL-divergence is a similarity measure between distributions, then we can create regularizer:
+<p>with new parameters matrix $\Psi = \{ \psi_{ta} \}_{T \times A}$ containing probabilities p(topic | ancestor topic) calles <strong>link weights</strong>.</p>
+<p>If KL-divergence is a similarity measure between distributions, previous equation produces regularizer for next level model:
    $$ R(\Phi, \Psi) = \sum_w \sum_a \phi_{wa} \ln \sum_t \phi_{wt} \psi_{ta} \rightarrow max_{\Phi, \Psi}  $$.</p>
 <p>$$ \sum_d \sum_w n_{dw} \ln \sum_t \phi_{wt} \theta_{td} + \tau  R(\Phi, \Psi) \rightarrow max_{\Phi, \Psi, \Theta}  $$
 Both likelihood and regularizer formulas have common structure. So there is a simple way to train $\Psi$ simultaneously with $\Phi$ and $\Theta$:</p>
@@ -11867,7 +11868,7 @@ Both likelihood and regularizer formulas have common structure. So there is a si
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>You should pass to hARTM parameters that are common for all levels. These are the same parameters that you pass to usual ARTM model.</p>
-<p>Levels will built one by one. To add first level, use add_level method specifying remaining model parameters (unique for the level):</p>
+<p>Levels will be built one by one. To add first level, use add_level method specifying remaining model parameters (unique for the level):</p>
 
 </div>
 </div>
@@ -12073,7 +12074,7 @@ Explaination of add_level parameters:</p>
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython2"><pre><span></span><span class="n">hier</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;p_wt&quot;</span><span class="p">)</span>
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">hier</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12086,7 +12087,7 @@ Explaination of add_level parameters:</p>
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Here path is a path where you want to save hierarchy's files, model_name specifies what matrix to save (as in ARTM.save method).</p>
+<p>Here path is a path where you want to save hierarchy's files.</p>
 
 </div>
 </div>
@@ -12110,6 +12111,172 @@ Explaination of add_level parameters:</p>
              <span class="n">scores</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">regularizers</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">num_document_passes</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">reuse_theta</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
              <span class="n">dictionary</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cache_theta</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">theta_columns_naming</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">hier</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>You can access number of levels of hierarchy using .num_levels:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">print</span> <span class="n">hier</span><span class="o">.</span><span class="n">num_levels</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="3.-Improving-hierarchy-structure">3. Improving hierarchy structure<a class="anchor-link" href="#3.-Improving-hierarchy-structure">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Hierarchy-sparsing-regularizer">Hierarchy sparsing regularizer<a class="anchor-link" href="#Hierarchy-sparsing-regularizer">&#182;</a></h3><p>When building a level of hierarchy a problem can occur. Some topics may have low link weights for all ancestor topics:
+$$ p(t|a) \approx 0 \quad \forall a  $$
+This may occur due to real lack of appropriate parent topics or because such topic tries to be a subtopic of all ancestors.</p>
+<p>To avoid this situation, special <strong>hierarchy sparsing regularizer</strong> can be used. It affects $\Psi$ matrix and makes all distributions p(ancestor | topic) be sparse. In this case each topic will have a small amount of parents. As with other sparsing regularizers, we maximize KL(uniform distribution | p(a|t) ). After transformations we get regularizer criteria:
+$$R_2(\Psi) = \sum_a \sum_t p(a | t) = \sum_a \sum_t \frac{p(t|a) p(a)} {\sum_{t'} p(t'|a) p(a)} = 
+\sum_a \sum_t \frac{\psi_{ta} p(a)} {\sum_{t'} \psi_{ta} p(a)} \rightarrow max_{\Psi}$$</p>
+<p>Values p(a) don't slightly affect $\Psi$ so can be set uniform. Updated M-step:
+$$ \psi_{ta} = \text{norm}_{t} \Biggl[ n_{ta} - \biggl( \frac 1 {|A|} - p(a | t) \biggr) \Biggr]$$</p>
+<p>If ancestor $a$ has high $p(a | t)$ for some $t$, it will be more increased.  Links with low $p(a | t)$ will be reduced.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Reularizer-usage">Reularizer usage<a class="anchor-link" href="#Reularizer-usage">&#182;</a></h3><p>As $\Psi$ in BigARTM is part of $\Theta$, then HierarchySparsingRegularizer is theta regularizer. It can be used the same way as other BigARTM regularizers:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">level1</span><span class="o">.</span><span class="n">regularizers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">artm</span><span class="o">.</span><span class="n">HierarchySparsingThetaRegularizer</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;HierSp&quot;</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mf">1.0</span><span class="p">))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This regularizer can affect only special parent levels phi batches. It means that if you add HierarchySparsingRegularizer to usual, not hierarchy level model, regularizer will have no effect. The same with regular batches' theta, it will not be affected by this regularizer.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="4.-Hierarchy-structure-quality-measures">4. Hierarchy structure quality measures<a class="anchor-link" href="#4.-Hierarchy-structure-quality-measures">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>You can use all BigARTM scores to assess separate level models. Also there are some measures that describe hierarchy structure. They can be easily computed using numpy so they are not implemented in BigARTM.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Support">Support<a class="anchor-link" href="#Support">&#182;</a></h3><p>Usually it is needed to set psi threshold that is min value of $p(t | a)$ so that link a-t will be included to topic graph. But  with high threshold some topics will have no parents. We define <strong>support</strong> as maximum avialable threshold for Psi matrix with which all topics will have at least one ancestor.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">print</span> <span class="s2">&quot;Psi support:&quot;</span><span class="p">,</span> <span class="n">psi</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Mean-parents-count">Mean parents count<a class="anchor-link" href="#Mean-parents-count">&#182;</a></h3><p>In BigARTM hierarchy is defined as multilevel topic graph rathjer than topic tree. So it is reasonable to evaluate mean count of parents.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">psi_threshold</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">parent_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">level_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">hier</span><span class="o">.</span><span class="n">num_levels</span><span class="p">):</span>
+    <span class="n">psi</span> <span class="o">=</span> <span class="n">hier</span><span class="o">.</span><span class="n">get_level</span><span class="p">(</span><span class="n">level_idx</span><span class="p">)</span><span class="o">.</span><span class="n">get_psi</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">parent_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">parent_counts</span><span class="p">,</span> <span class="p">(</span><span class="n">psi</span> <span class="o">&gt;</span> <span class="n">psi_threshold</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
+<span class="k">print</span> <span class="s2">&quot;Mean parents count:&quot;</span><span class="p">,</span> <span class="n">parent_counts</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 </pre></div>
 
 </div>
